@@ -71,6 +71,7 @@ import isUrl from 'is-url';
 import SDKSessionsManager from '../../Views/SDKSessionsManager/SDKSessionsManager';
 import URL from 'url-parse';
 import Logger from '../../../util/Logger';
+import { SnapsDev } from '../../Views/Snaps';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -613,6 +614,16 @@ const SetPasswordFlow = () => (
       name="OptinMetrics"
       component={OptinMetrics}
       options={OptinMetrics.navigationOptions}
+    />
+  </Stack.Navigator>
+);
+
+const SnapsDevUI = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name={Routes.SNAPS.HOME}
+      component={SnapsDev}
+      options={SnapsDev.navigationOptions}
     />
   </Stack.Navigator>
 );

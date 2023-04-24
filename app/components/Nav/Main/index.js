@@ -70,6 +70,7 @@ import WarningAlert from '../../../components/UI/WarningAlert/WarningAlert';
 import { LINEA_MAINNET } from '../../../constants/network';
 import jsonRpcRequest from '../../../util/jsonRpcRequest';
 import { LINEA_MAINNET_RPC_URL } from '../../../constants/urls';
+import { SnapsExecutionWebView } from '../../UI/SnapsExecutionWebView';
 
 const Stack = createStackNavigator();
 
@@ -358,6 +359,9 @@ const Main = (props) => {
         ) : (
           renderLoader()
         )}
+        <View>
+          <SnapsExecutionWebView />
+        </View>
         <GlobalAlert />
         <FadeOutOverlay />
         <Notification navigation={props.navigation} />

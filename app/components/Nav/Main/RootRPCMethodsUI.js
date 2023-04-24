@@ -36,6 +36,7 @@ import { toLowerCaseEquals } from '../../../util/general';
 import { KEYSTONE_TX_CANCELED } from '../../../constants/error';
 import { MetaMetricsEvents } from '../../../core/Analytics';
 import AnalyticsV2 from '../../../util/analyticsV2';
+import { InstallSnapApproval } from '../../UI/InstallSnapApproval';
 
 import {
   selectChainId,
@@ -326,6 +327,47 @@ const RootRPCMethodsUI = (props) => {
   const onTransactionComplete = useCallback(() => {
     setTransactionModalType(undefined);
   }, []);
+
+  const onInstallSnapConfirm = () => {
+    acceptPendingApproval(hostToApprove.id, hostToApprove.requestData);
+    setShowPendingApproval(false);
+  };
+
+  const onInstallSnapReject = () => {
+    // eslint-disable-next-line no-console
+    console.log(
+      'onInstallSnapReject',
+      hostToApprove.id,
+      hostToApprove.requestData,
+    );
+    rejectPendingApproval(hostToApprove.id, hostToApprove.requestData);
+    setShowPendingApproval(false);
+  };
+
+  /**
+   * Render the modal that asks the user to approve/reject connections to a dapp using the MetaMask SDK.
+   */
+  const renderInstallSnapApprovalModal = () => (
+    <Modal
+      isVisible={showPendingApproval?.type === ApprovalTypes.INSTALL_SNAP}
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
+      style={styles.bottomModal}
+      backdropColor={colors.overlay.default}
+      backdropOpacity={1}
+      animationInTiming={300}
+      animationOutTiming={300}
+      onSwipeComplete={onInstallSnapReject}
+      onBackdropPress={onInstallSnapReject}
+      swipeDirection={'down'}
+    >
+      <InstallSnapApproval
+        onCancel={onInstallSnapReject}
+        onConfirm={onInstallSnapConfirm}
+        requestData={hostToApprove}
+      />
+    </Modal>
+  );
 
   // unapprovedTransaction effect
   useEffect(() => {
