@@ -58,6 +58,8 @@ import TemplateConfirmationModal from '../../Approvals/TemplateConfirmationModal
 import { selectTokenList } from '../../../selectors/tokenListController';
 import { selectTokens } from '../../../selectors/tokensController';
 import { selectSelectedAddress } from '../../../selectors/preferencesController';
+import { createAccountConnectNavDetails } from '../../Views/AccountConnect';
+import { InstallSnapApprovalFlow } from '../../UI/InstallSnapApprovalFlow';
 
 const hstInterface = new ethers.utils.Interface(abi);
 
@@ -330,18 +332,17 @@ const RootRPCMethodsUI = (props) => {
 
   const onInstallSnapConfirm = () => {
     acceptPendingApproval(hostToApprove.id, hostToApprove.requestData);
+  };
+
+  const onInstallSnapFinished = () => {
     setShowPendingApproval(false);
+    setInstallSnap(false);
   };
 
   const onInstallSnapReject = () => {
-    // eslint-disable-next-line no-console
-    console.log(
-      'onInstallSnapReject',
-      hostToApprove.id,
-      hostToApprove.requestData,
-    );
     rejectPendingApproval(hostToApprove.id, hostToApprove.requestData);
     setShowPendingApproval(false);
+    setInstallSnap(false);
   };
 
   /**
@@ -349,7 +350,7 @@ const RootRPCMethodsUI = (props) => {
    */
   const renderInstallSnapApprovalModal = () => (
     <Modal
-      isVisible={showPendingApproval?.type === ApprovalTypes.INSTALL_SNAP}
+      isVisible={installSnap}
       animationIn="slideInUp"
       animationOut="slideOutDown"
       style={styles.bottomModal}
@@ -361,9 +362,10 @@ const RootRPCMethodsUI = (props) => {
       onBackdropPress={onInstallSnapReject}
       swipeDirection={'down'}
     >
-      <InstallSnapApproval
+      <InstallSnapApprovalFlow
         onCancel={onInstallSnapReject}
         onConfirm={onInstallSnapConfirm}
+        onFinish={onInstallSnapFinished}
         requestData={hostToApprove}
       />
     </Modal>
@@ -382,6 +384,109 @@ const RootRPCMethodsUI = (props) => {
       );
     };
   }, [onUnapprovedTransaction]);
+
+  const handlePendingApprovals = async (approval) => {
+    //TODO: IF WE RECEIVE AN APPROVAL REQUEST, AND WE HAVE ONE ACTIVE, SHOULD WE HIDE THE CURRENT ONE OR NOT?
+
+    if (approval.pendingApprovalCount > 0) {
+      const key = Object.keys(approval.pendingApprovals)[0];
+      const request = approval.pendingApprovals[key];
+      const requestData = { ...request.requestData };
+      if (requestData.pageMeta) {
+        setCurrentPageMeta(requestData.pageMeta);
+      }
+
+      switch (request.type) {
+        case ApprovalTypes.INSTALL_SNAP:
+          setHostToApprove({ requestData, id: request.id });
+          showPendingApprovalModal({
+            type: ApprovalTypes.INSTALL_SNAP,
+            origin: request.origin,
+          });
+          setInstallSnap(true);
+          break;
+        case ApprovalTypes.UPDATE_SNAP:
+          // eslint-disable-next-line no-console
+          console.log('Update Snap');
+          break;
+        case ApprovalTypes.REQUEST_PERMISSIONS:
+          // eslint-disable-next-line no-case-declarations
+          const {
+            metadata: { id },
+          } = requestData;
+
+          // eslint-disable-next-line no-case-declarations
+          const totalAccounts = props.accountsLength;
+
+          AnalyticsV2.trackEvent(MetaMetricsEvents.CONNECT_REQUEST_STARTED, {
+            number_of_accounts: totalAccounts,
+            source: 'PERMISSION SYSTEM',
+          });
+
+          props.navigation.navigate(
+            ...createAccountConnectNavDetails({
+              hostInfo: requestData,
+              permissionRequestId: id,
+            }),
+          );
+          break;
+        case ApprovalTypes.CONNECT_ACCOUNTS:
+          setHostToApprove({ data: requestData, id: request.id });
+          showPendingApprovalModal({
+            type: ApprovalTypes.CONNECT_ACCOUNTS,
+            origin: request.origin,
+          });
+          break;
+        case ApprovalTypes.SWITCH_ETHEREUM_CHAIN:
+          setCustomNetworkToSwitch({ data: requestData, id: request.id });
+          showPendingApprovalModal({
+            type: ApprovalTypes.SWITCH_ETHEREUM_CHAIN,
+            origin: request.origin,
+          });
+          break;
+        case ApprovalTypes.ADD_ETHEREUM_CHAIN:
+          setCustomNetworkToAdd({ data: requestData, id: request.id });
+          showPendingApprovalModal({
+            type: ApprovalTypes.ADD_ETHEREUM_CHAIN,
+            origin: request.origin,
+          });
+          break;
+        case ApprovalTypes.WALLET_CONNECT:
+          setWalletConnectRequestInfo({ data: requestData, id: request.id });
+          showPendingApprovalModal({
+            type: ApprovalTypes.WALLET_CONNECT,
+            origin: request.origin,
+          });
+          break;
+        case ApprovalTypes.ETH_SIGN:
+        case ApprovalTypes.PERSONAL_SIGN:
+        case ApprovalTypes.ETH_SIGN_TYPED_DATA:
+          setSignMessageParams(requestData);
+          showPendingApprovalModal({
+            type: request.type,
+            origin: request.origin,
+          });
+          break;
+        case ApprovalTypes.WATCH_ASSET:
+          setWatchAsset({ data: requestData, id: request.id });
+          showPendingApprovalModal({
+            type: ApprovalTypes.WATCH_ASSET,
+            origin: request.origin,
+          });
+          break;
+        case ApprovalTypes.TRANSACTION:
+          showPendingApprovalModal({
+            type: ApprovalTypes.TRANSACTION,
+            origin: request.origin,
+          });
+          break;
+        default:
+          break;
+      }
+    } else {
+      setShowPendingApproval(false);
+    }
+  };
 
   useEffect(() => {
     initializeWalletConnect();
