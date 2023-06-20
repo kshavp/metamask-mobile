@@ -170,7 +170,12 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-	  }
+        flask {
+            storeFile file('../keystores/flaskRelease.keystore')
+            storePassword System.getenv("BITRISEIO_ANDROID_FLASK_KEYSTORE_PASSWORD")
+            keyAlias System.getenv("BITRISEIO_ANDROID_FLASK_KEYSTORE_ALIAS")
+            keyPassword System.getenv("BITRISEIO_ANDROID_FLASK_KEYSTORE_PRIVATE_KEY_PASSWORD")
+	    }
 
     splits {
         abi {
@@ -205,6 +210,14 @@ android {
             dimension "version"
             applicationId "io.metamask"
             signingConfig signingConfigs.release
+          }
+          flask {
+            dimension "version"
+            versionName "0.0.3"
+            versionCode 1128
+            applicationIdSuffix ".flask"
+            applicationId "io.metamask"
+            signingConfig signingConfigs.flask
           }
     	  }
 
