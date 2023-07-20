@@ -32,6 +32,7 @@ import {
 import {
   selectChainId,
   selectNetwork,
+  selectNetworkConfigurations,
   selectRpcTarget,
 } from '../../../selectors/networkController';
 import { selectTokens } from '../../../selectors/tokensController';
@@ -57,7 +58,6 @@ import {
   selectCurrentCurrency,
 } from '../../../selectors/currencyRateController';
 import {
-  selectFrequentRpcList,
   selectIdentities,
   selectSelectedAddress,
 } from '../../../selectors/preferencesController';
@@ -171,7 +171,7 @@ class Asset extends PureComponent {
      */
     route: PropTypes.object,
     rpcTarget: PropTypes.string,
-    frequentRpcList: PropTypes.array,
+    networkConfigurations: PropTypes.object,
     /**
      * Boolean that indicates if native token is supported to buy
      */
@@ -196,12 +196,15 @@ class Asset extends PureComponent {
   navAddress = undefined;
 
   updateNavBar = (contentOffset = 0) => {
-    const { navigation, route, chainId, rpcTarget, frequentRpcList } =
+    const { navigation, route, chainId, rpcTarget, networkConfigurations } =
       this.props;
     const colors = this.context.colors || mockTheme.colors;
     const isNativeToken = route.params.isETH;
     const isMainnet = isMainnetByChainId(chainId);
-    const blockExplorer = findBlockExplorerForRpc(rpcTarget, frequentRpcList);
+    const blockExplorer = findBlockExplorerForRpc(
+      rpcTarget,
+      networkConfigurations,
+    );
 
     const shouldShowMoreOptionsInNavBar =
       isMainnet || !isNativeToken || (isNativeToken && blockExplorer);
@@ -582,7 +585,7 @@ const mapStateToProps = (state) => ({
   transactions: state.engine.backgroundState.TransactionController.transactions,
   thirdPartyApiMode: state.privacy.thirdPartyApiMode,
   rpcTarget: selectRpcTarget(state),
-  frequentRpcList: selectFrequentRpcList(state),
+  networkConfigurations: selectNetworkConfigurations(state),
   isNetworkBuyNativeTokenSupported: isNetworkBuyNativeTokenSupported(
     selectChainId(state),
     getRampNetworks(state),
