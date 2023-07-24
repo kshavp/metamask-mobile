@@ -56,7 +56,30 @@ jobs:
             echo "Working tree dirty at end of job"
             exit 1
           fi
-  tests:
+  unit-tests:
+    runs-on: ubuntu-20.04
+    needs: setup
+    strategy:
+      matrix:
+        shard: [1/5, 2/5, 3/5, 4/5, 5/5]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+      - run: yarn setup
+      - run: yarn test:unit --shard=${{ matrix.shard }} --forceExit --silent
+        env:
+          NODE_OPTIONS: --max_old_space_size=20480
+      - name: Require clean working directory
+        shell: bash
+        run: |
+          if ! git diff --exit-code; then
+            echo "Working tree dirty at end of job"
+            exit 1
+          fi
+  sonar-cloud:
     runs-on: ubuntu-20.04
     needs: setup
     steps:
@@ -66,9 +89,6 @@ jobs:
           node-version-file: '.nvmrc'
           cache: yarn
       - run: yarn setup
-      - run: yarn test:unit --forceExit --silent
-        env:
-          NODE_OPTIONS: --max_old_space_size=20480
       - name: SonarCloud Scan
         # v1.9.1
         uses: SonarSource/sonarcloud-github-action@5875562561d22a34be0c657405578705a169af6c
@@ -96,6 +116,6 @@ jobs:
   all-jobs-pass:
     name: All jobs pass
     runs-on: ubuntu-20.04
-    needs: [setup, scripts, tests, check-workflows]
+    needs: [setup, scripts, unit-tests, check-workflows, sonar-cloud]
     steps:
       - run: echo "Great success!"
