@@ -15,12 +15,14 @@ import LoginScreen from '../screen-objects/LoginScreen';
 import TermOfUseScreen from '../screen-objects/Modals/TermOfUseScreen';
 import WhatsNewModal from '../screen-objects/Modals/WhatsNewModal';
 
-Then(/^the Welcome Screen is displayed$/, async () => {
-  await WelcomeScreen.waitForScreenToDisplay();
+const fixtureServer = new FixtureServer();
+
+Then(/^the Welcome screen is displayed$/, async () => {
+  await WelcomeScreen.isScreenDisplayed();
 });
 
 Given(/^the app displayed the splash animation$/, async () => {
-  await WelcomeScreen.waitForSplashAnimationToDisplay();
+  await WelcomeScreen.isScreenDisplayed();
 });
 
 Given(/^the splash animation disappears$/, async () => {
@@ -168,7 +170,7 @@ Then(
 
 When(/^I log into my wallet$/, async () => {
   await LoginScreen.tapUnlockButton();
-  await WalletMainScreen.isMainWalletViewVisible();
+  await WalletMainScreen.isVisible();
 });
 
 When(/^I kill the app$/, async () => {

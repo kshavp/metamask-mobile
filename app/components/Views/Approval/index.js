@@ -43,6 +43,7 @@ import {
   selectChainId,
   selectProviderType,
 } from '../../../selectors/networkController';
+import { selectSelectedAddress } from '../../../selectors/preferencesController';
 import { ethErrors } from 'eth-rpc-errors';
 
 const REVIEW = 'review';
@@ -100,10 +101,7 @@ class Approval extends PureComponent {
      */
     showCustomNonce: PropTypes.bool,
     nonce: PropTypes.number,
-    /**
-     * Active tab URL, the currently active tab url
-     */
-    activeTabUrl: PropTypes.string,
+
     /**
      * A string representing the network chainId
      */
@@ -140,7 +138,7 @@ class Approval extends PureComponent {
     try {
       const { transactionHandled } = this.state;
       const { transaction, selectedAddress } = this.props;
-      const { KeyringController } = Engine.context;
+      const { KeyringController, ApprovalController } = Engine.context;
       if (!transactionHandled) {
         if (isQRHardwareAccount(selectedAddress)) {
           KeyringController.cancelQRSignRequest();
@@ -196,17 +194,21 @@ class Approval extends PureComponent {
     try {
       if (appState !== 'active') {
         const { transaction, transactions } = this.props;
+        const { ApprovalController } = Engine.context;
         const currentTransaction = transactions.find(
           (tx) => tx.id === transaction.id,
         );
 
-        transaction &&
-          transaction.id &&
-          this.isTxStatusCancellable(currentTransaction) &&
-          Engine.context.ApprovalController.reject(
+        if (
+          transaction?.id &&
+          ApprovalController.has({ id: transaction?.id }) &&
+          this.isTxStatusCancellable(currentTransaction)
+        ) {
+          ApprovalController.reject(
             transaction.id,
             ethErrors.provider.userRejectedRequest(),
           );
+        }
         this.props.hideModal();
       }
     } catch (e) {
@@ -287,13 +289,11 @@ class Approval extends PureComponent {
 
   getAnalyticsParams = ({ gasEstimateType, gasSelected } = {}) => {
     try {
-      const { activeTabUrl, chainId, transaction, selectedAddress } =
-        this.props;
+      const { chainId, transaction, selectedAddress } = this.props;
       const { selectedAsset } = transaction;
       return {
         account_type: getAddressAccountType(selectedAddress),
         dapp_host_name: transaction?.origin,
-        dapp_url: activeTabUrl,
         chain_id: chainId,
         active_currency: { value: selectedAsset?.symbol, anonymous: true },
         asset_type: { value: transaction?.assetType, anonymous: true },
@@ -600,8 +600,7 @@ class Approval extends PureComponent {
 const mapStateToProps = (state) => ({
   transaction: getNormalizedTxState(state),
   transactions: state.engine.backgroundState.TransactionController.transactions,
-  selectedAddress:
-    state.engine.backgroundState.PreferencesController.selectedAddress,
+  selectedAddress: selectSelectedAddress(state),
   networkType: selectProviderType(state),
   showCustomNonce: state.settings.showCustomNonce,
   chainId: selectChainId(state),

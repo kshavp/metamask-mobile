@@ -15,6 +15,7 @@ import {
   renderShortAddress,
   getLabelTextByAddress,
 } from '../../../util/address';
+import { selectAccounts } from '../../../selectors/accountTrackerController';
 import {
   getHost,
   getUrlObj,
@@ -22,7 +23,7 @@ import {
 } from '../../../util/browser';
 import {
   getNetworkImageSource,
-  getNetworkNameFromProvider,
+  getNetworkNameFromProviderConfig,
 } from '../../../util/networks';
 import { WALLET_CONNECT_ORIGIN } from '../../../util/walletconnect';
 import useAddressBalance from '../../hooks/useAddressBalance/useAddressBalance';
@@ -50,10 +51,7 @@ const ApproveTransactionHeader = ({
   const { styles } = useStyles(stylesheet, {});
   const { addressBalance } = useAddressBalance(asset, from);
 
-  const accounts = useSelector(
-    (state: any) =>
-      state.engine.backgroundState.AccountTrackerController.accounts,
-  );
+  const accounts = useSelector(selectAccounts);
 
   const identities = useSelector(
     (state: any) =>
@@ -62,8 +60,8 @@ const ApproveTransactionHeader = ({
 
   const activeAddress = toChecksumAddress(from);
 
-  const networkProvider = useSelector(selectProviderConfig);
-  const networkName = getNetworkNameFromProvider(networkProvider);
+  const providerConfig = useSelector(selectProviderConfig);
+  const networkName = getNetworkNameFromProviderConfig(providerConfig);
 
   const useBlockieIcon = useSelector(
     (state: any) => state.settings.useBlockieIcon,
@@ -89,8 +87,8 @@ const ApproveTransactionHeader = ({
   }, [accounts, identities, activeAddress, origin]);
 
   const networkImage = getNetworkImageSource({
-    networkType: networkProvider.type,
-    chainId: networkProvider.chainId,
+    networkType: providerConfig.type,
+    chainId: providerConfig.chainId,
   });
 
   const domainTitle = useMemo(() => {
