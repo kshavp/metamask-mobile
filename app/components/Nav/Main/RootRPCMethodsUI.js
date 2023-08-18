@@ -372,7 +372,7 @@ const RootRPCMethodsUI = (props) => {
 
   const onTransactionComplete = useCallback(() => {
     setTransactionModalType(undefined);
-  };
+  }, []);
 
   const showTransactionApproval = () =>
     showPendingApproval?.type === ApprovalTypes.TRANSACTION;
@@ -396,7 +396,11 @@ const RootRPCMethodsUI = (props) => {
     return (
       transactionApprovalVisible &&
       transactionModalType === TransactionModalType.Transaction && (
-        <Approve modalVisible hideModal={hideTransactionModal} navigation={props.navigation} />
+        <Approve
+          modalVisible
+          hideModal={hideTransactionModal}
+          navigation={props.navigation}
+        />
       )
     );
   };
